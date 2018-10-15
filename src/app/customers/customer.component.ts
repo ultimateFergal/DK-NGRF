@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormControl, FormBuilder, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
+import { FormGroup, FormControl, FormBuilder, Validators, AbstractControl, ValidatorFn, FormArray } from '@angular/forms';
 
 import { debounceTime } from 'rxjs/operators';
 
@@ -48,6 +48,10 @@ export class CustomerComponent implements OnInit {
   customer: Customer = new Customer();
   emailMessage: string;
 
+  // Property defined as a function that will return a Formarray
+  get addresses(): FormArray{
+    return<FormArray>this.customerForm.get('addresses'); // Must be <FormArrary> so its nor abastract control
+  }
   private validationMessages = {
     required: 'Please enter your email address.',
     pattern: 'Please enter a valid email address.'
@@ -65,9 +69,11 @@ export class CustomerComponent implements OnInit {
         confirmEmail: ['', Validators.required ],
       }, { validator: emailMatcher }),
       phone: '',
-      sendCatalog: { value: true, disabled: true },
       rating: ['', ratingRange(1,5)],
-      notification: 'email'
+      notification: 'email',
+      sendCatalog: { value: true, disabled: false },
+      // addresses: this.buildAddress() // Calling the function that returns a formgroup to create dynamically
+      addresses: this.fb.array([ this.buildAddress() ]) // Must be using form array
     });
 
     /*     this.customerForm = new FormGroup({
@@ -130,7 +136,23 @@ export class CustomerComponent implements OnInit {
     if ((c.touched || c.dirty) && c.errors) {
       this.emailMessage = Object.keys(c.errors).map(key =>
         this.validationMessages[key]).join(' ');
-    }
-  
+    }  
+  }
+
+  // Creates a dynamic form in the formarray
+  addAddress(): void {
+    this.addresses.push(this.buildAddress());
+  }
+
+  // Function that creates formgroup dynamically
+  buildAddress(): FormGroup {
+    return this.fb.group({
+      addressType: 'home',
+      street1: '',
+      street2: '',
+      city: '',
+      state: '',
+      zip: '',
+    })
   }
 }
